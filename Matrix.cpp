@@ -3,30 +3,23 @@
 #include "Matrix.h"
 
 Matrix::Matrix(int m, int n) : m_rows(m), m_cols(n) {
-	std::cout << "ctr called" << std::endl;
 	CreateMatrix();
 }
 
 Matrix::Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols) {
-	std::cout<<"copy ctr called"<<std::endl;
-	std::cout<<"mrows : " << m_rows << "m_cols: "<<m_cols<<std::endl;
-
+    /* Assigning dynamic memory */
 	m_matrix = new float*[m_rows];
 
 	for(int i = 0; i < m_rows; i++)
 		m_matrix[i] = new float[m_cols];
 
-	/* Coping the values */
+	/* Copying all the values */
 	for(int i=0; i<m_rows; i++)
 		for(int j=0; j<m_cols; j++)
 			m_matrix[i][j] = other.m_matrix[i][j];
-
-	std::cout<<"end cpy ctr"<<std::endl;
 }
 
 Matrix::~Matrix() {
-	std::cout << "dtr called" <<std::endl;
-
 	for(int i = 0; i < m_rows; ++i)
 		delete[] m_matrix[i];
 
@@ -61,21 +54,19 @@ std::istream& operator>>(std::istream& in, Matrix& mat) {
 			std::cout<<"matrix["<<i+1<<"]["<<j+1<<"]: ";
 			in>>mat.m_matrix[i][j];
 		}
-
 	return in;
 }
 
 const Matrix& Matrix::operator=(const Matrix& other) {
-	std::cout<<"assignment operator called"<<std::endl;
+    // checking for auto assignment
 	if(&other != this) {
+        /* Assigning new values */
 		if(m_rows == other.m_rows && m_cols == other.m_cols) {
-			std::cout<<"same size"<<std::endl;
 			for(int i=0; i<m_rows; i++)
 				for(int j=0; j<m_cols; j++)
 					m_matrix[i][j] = other.m_matrix[i][j];
 		} else {
-			std::cout<<"diferent size"<<std::endl;
-			/* Resizing the matrix */
+			/* Resizing the matrix and assigning new values */
 			for(int i = 0; i < m_rows; ++i)
 				delete[] m_matrix[i];
 
@@ -93,22 +84,10 @@ const Matrix& Matrix::operator=(const Matrix& other) {
 	return *this;
 }
 
-void Matrix::CreateMatrix() {
-	m_matrix = new float*[m_rows];
-
-	for(int i = 0; i < m_rows; i++)
-		m_matrix[i] = new float[m_cols];
-
-	/* initializing the matrix to 0 */
-	for(int i=0; i<m_rows; i++)
-		for(int j=0; j<m_cols; j++)
-			m_matrix[i][j] = 0;
-}
-
 float Matrix::Determinant(const Matrix& mat) {
 	float det=0;
 	for(int j = 0; j < mat.m_cols; ++j)
-		det += ((0+j) % 2 == 0 ? 1 : -1) * mat.m_matrix[0][j] * Cofactor(mat, 0, j);
+		det += ((0+j) % 2 == 0 ? 1 : -1) * mat.m_matrix[0][j] * Cofactor(mat, 0, j); // solving with minors and cofactors
 
 	return det;
 }
@@ -136,8 +115,8 @@ float Matrix::Cofactor(const Matrix& mat, int m, int n) {
 
 	if(cofMat.m_rows == 1)
 		return subMat[0][0];
-	else{
-        return Determinant(cofMat);
+	else {
+		return Determinant(cofMat);
 	}
 }
 
@@ -216,4 +195,16 @@ Matrix Matrix::Subtract(const Matrix& matA, const Matrix& matB) {
 			subPtr[i][j]= matA.m_matrix[i][j] - matB.m_matrix[i][j];
 
 	return subMat;
+}
+
+void Matrix::CreateMatrix() {
+	m_matrix = new float*[m_rows];
+
+	for(int i = 0; i < m_rows; i++)
+		m_matrix[i] = new float[m_cols];
+
+	/* initializing matrix to 0 */
+	for(int i=0; i<m_rows; i++)
+		for(int j=0; j<m_cols; j++)
+			m_matrix[i][j] = 0;
 }

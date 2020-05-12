@@ -13,14 +13,17 @@ public:
 	Matrix(const Matrix& other); // copy constructor
 	~Matrix();
 
-	const Matrix& operator=(const Matrix& other);
 	float** GetMatrixPtr()const;
 	int GetRows()const;
 	int GetColumns()const;
+
+	const Matrix& operator=(const Matrix& other);
+
 	static float Determinant(const Matrix& mat);
 	static float Cofactor(const Matrix& mat, int m, int n);
 	static Matrix Inverse(const Matrix& mat);
 	static Matrix Transpose(const Matrix& mat);
+
 	static Matrix Mult(const Matrix& matA, const Matrix& matB);
 	static Matrix Add(const Matrix& matA, const Matrix& matB);
 	static Matrix Subtract(const Matrix& matA, const Matrix& matB);
