@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include "Matrix.h"
 
 Matrix::Matrix(int m, int n) : m_rows(m), m_cols(n) {
