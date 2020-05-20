@@ -29,7 +29,9 @@ void SortData();
 bool EstaEnRango(float numInterpolar);
 void InterpolacionDiferenciasDivididas(float numInterpolar, int grado);
 
+void SetupTableDiferenciacionIntegracion();
 void LeerTablaDiferenciacionIntegracion();
+void ModificarPosicionDiferenciacionIntegracion(int position);
 int posicionIntervalo(float intervalo);
 
 void Newton();
@@ -39,6 +41,12 @@ void Diferencias();
 void SplineCubico();
 void Diferenciacion();
 void Integracion();
+float SimpsonOneThird(const std::vector<float> subPosition, float hStep);
+float SimpsonThreeEighths(const std::vector<float> subPosition, float hStep);
+std::vector<float> copyVector(int initialPosition, int finalPosition);
+int Subintervals(int dataSize);
+bool DataIsEquidistant();
+
 
 std::vector<std::pair<float, float>> data;
 
@@ -444,35 +452,47 @@ void MenuDiferenciacionIntegracion() {
 }
 
 void MetodosDiferenciacionIntegracion() {
-	int opc;
-	clearScreen();
-	MenuDiferenciacionIntegracion();
-	std::cout<<"Selecciona una opcion: ";
-	std::cin>>opc;
+    char opc;
+//	int opc;
+//	clearScreen();
+//	MenuDiferenciacionIntegracion();
+//	std::cout<<"Selecciona una opcion: ";
+//	std::cin>>opc;
 
-	switch(opc) {
-	case 1:
-		Diferenciacion();
-		break;
-	case 2:
-		Integracion();
-		break;
-	default:
-		std::cout<<"Opcion Incorrecta"<<std::endl;
-		break;
-	}
+//	switch(opc) {
+//	case 1:
+//		Diferenciacion();
+//		break;
+//	case 2:
+//		Integracion();
+//		break;
+//	default:
+//		std::cout<<"Opcion Incorrecta"<<std::endl;
+//		break;
+//	}
+    do{
+    clearScreen();
+    std::cout<<"Metodo de diferenciacion (Diferencias centradas)"<<std::endl;
+    Diferenciacion();
+    std::cin.ignore();
+	std::cout<<"Presiona enter para continuar con el metodo de integracion"<<std::endl;
+	getchar();
+    Integracion();
+    std::cout<<"Deseas realizar otro calculo? (s/n): ";
+    std::cin>>opc;
+    }while(opc == 's');
 }
 
 void Diferenciacion() {
-    char opc;
-    float hStep;
-    float intervaloInf, intervaloSup;
-    std::vector<float> derivadas;
+	char opc;
+	float hStep;
+	float intervaloInf, intervaloSup;
+	std::vector<float> derivadas;
 
 	clearScreen();
-	std::cout<<"Metodo de diferenciacion (Diferencias centradas)"<<std::endl;
 
-    if(!data.empty()) {
+	if(!data.empty()) {
+        if(DataIsEquidistant()){
 		ImprimirTabla();
 		std::cout<<"Te gustaria usar la ultima tabla ingresada? (s/n): ";
 		std::cin>>opc;
@@ -480,49 +500,137 @@ void Diferenciacion() {
 		if(opc != 's') {
 			data.clear();
 			clearScreen();
-			LeerTablaDiferenciacionIntegracion();
+			SetupTableDiferenciacionIntegracion();
+		}
+		}else{
+            data.clear();
+			clearScreen();
+			std::cout<<"Datos de la ultima tabla no equidistantes"<<std::endl;
+			SetupTableDiferenciacionIntegracion();
 		}
 	}
 
 	// do statement
 	clearScreen();
+	std::cout<<"Metodo de diferenciacion (Diferencias centradas)"<<std::endl;
 	if(data.empty()) {
-		LeerTablaDiferenciacionIntegracion();
+		SetupTableDiferenciacionIntegracion();
 	}
+
+	clearScreen();
+	std::cout<<"Metodo de diferenciacion (Diferencias centradas)"<<std::endl;
+	ImprimirTabla();
 
 	std::cout<<"Ingresa el valor del intervalo inferior: ";
 	std::cin>>intervaloInf;
 	std::cout<<"Ingresa el valor del intervalo superior: ";
 	std::cin>>intervaloSup;
-    ImprimirTabla();
+	//ImprimirTabla();
 	int indexInf = posicionIntervalo(intervaloInf);
 	int indexSup = posicionIntervalo(intervaloSup);
 
-	if((indexInf < 0 || indexSup < 0) || (intervaloInf > intervaloSup) || (abs(indexSup-indexInf) < 1)){
-        std::cout<<"intervalo fuera de rango"<<std::endl;
-        return;
+//	if((indexInf < 0 || indexSup < 0) || (intervaloInf > intervaloSup) || (abs(indexSup-indexInf) < 1)) {
+//		std::cout<<"intervalo fuera de rango"<<std::endl;
+//		return;
+//	}
+
+	while((indexInf < 0 || indexSup < 0) || (intervaloInf > intervaloSup) || (abs(indexSup-indexInf) < 1)) {
+		std::cout<<"intervalo fuera de rango"<<std::endl;
+		std::cout<<"Ingresa el valor del intervalo inferior: ";
+		std::cin>>intervaloInf;
+		std::cout<<"Ingresa el valor del intervalo superior: ";
+		std::cin>>intervaloSup;
+
+        indexInf = posicionIntervalo(intervaloInf);
+        indexSup = posicionIntervalo(intervaloSup);
 	}
 
 	hStep = data[1].first - data[0].first;
-    for(int i=indexInf+1; i<indexSup; i++){
-        float derivada = ((1/(2*hStep)) * (data[i+1].second - data[i-1].second));
-        derivadas.push_back(derivada);
-    }
+	for(int i=indexInf+1; i<indexSup; i++) {
+		float derivada = ((1/(2*hStep)) * (data[i+1].second - data[i-1].second));
+		derivadas.push_back(derivada);
+	}
 
-    std::cout<<"x \t f'(x)"<<std::endl;
-    for(int i=0; i<derivadas.size(); i++){
-        std::cout<<data[indexInf + i +1].first<<"\t "<<derivadas[i]<<std::endl;
-    }
-
+	std::cout<<"x \t f'(x)"<<std::endl;
+	for(int i=0; i<derivadas.size(); i++) {
+		std::cout<<data[indexInf + i +1].first<<"\t "<<derivadas[i]<<std::endl;
+	}
 }
 
 void Integracion() {
+	char opc;
+	float hStep;
+	clearScreen();
+	std::cout<<"Metodo de integracion (Reglas de Simpson)"<<std::endl;
 
+	if(!data.empty()) {
+		ImprimirTabla();
+		std::cout<<"Te gustaria modificar la ultima tabla ingresada? (s/n): ";
+		std::cin>>opc;
+
+		while (opc == 's') {
+		int position;
+		std::cout << "Indica la posicion que se modificara: ";
+		std::cin >> position;
+		ModificarPosicionDiferenciacionIntegracion(position);
+		ImprimirTabla();
+		std::cout << "Te gustaria modificar otra posicion de la tabla?: (s/n): ";
+		std::cin >> opc;
+	}
+
+//		if(opc != 's') {
+//			data.clear();
+//			clearScreen();
+//			SetupTableDiferenciacionIntegracion();
+//		}
+	}
+
+	// do statement
+	clearScreen();
+	std::cout<<"Metodo de integracion (Reglas de Simpson)"<<std::endl;
+	if(data.empty()) {
+		SetupTableDiferenciacionIntegracion();
+	}
+
+	clearScreen();
+	std::cout<<"Metodo de integracion (Reglas de Simpson)"<<std::endl;
+	ImprimirTabla();
+
+	hStep = data[1].first - data[0].first;
+	if((data.size() -1) % 2 == 0) {
+        std::cout<<"Regla de Simpson 1/3"<<std::endl;
+		float integral = 0.0;
+		int intervals = Subintervals(data.size()-1);
+
+		for(int i=0; i < intervals; i++) {
+			int initalSubinterval = (i == 0) ? 0 : (i % 2 == 0) ? i+2 : i+1;
+			std::vector<float> subPosition = copyVector(initalSubinterval, initalSubinterval+2);
+			integral += SimpsonOneThird(subPosition, hStep);
+		}
+
+		std::cout<<"El valor de la integral es: "<<integral<<std::endl;
+
+	} else if((data.size() - 1) % 2 != 0) {
+		std::cout<<"simpson 1/3 + 3/8"<<std::endl;
+
+		float integral = 0.0;
+		int intervals = Subintervals(data.size()-1) - 2;
+
+		for(int i=0; i < intervals; i++) {
+			int initalSubinterval = (i == 0) ? 0 : (i % 2 == 0) ? i+2 : i+1;
+			std::vector<float> subPosition = copyVector(initalSubinterval, initalSubinterval+2);
+			integral += SimpsonOneThird(subPosition, hStep);
+		}
+		std::vector<float> subPosition = copyVector(data.size()-4, data.size()-1);
+		integral += SimpsonThreeEighths(subPosition, hStep);
+
+		std::cout<<"El valor de la integral es: "<<integral<<std::endl;
+	}
 }
 
-void LeerTablaDiferenciacionIntegracion(){
-    float fx, x0, hStep;
-    int numDatos;
+void LeerTablaDiferenciacionIntegracion() {
+	float fx, x0, hStep;
+	int numDatos;
 
 	std::cout<<"Ingresa el numero de datos: ";
 	std::cin>>numDatos;
@@ -531,8 +639,8 @@ void LeerTablaDiferenciacionIntegracion(){
 	std::cout<<"Ingresa el valor de paso h: ";
 	std::cin>>hStep;
 
-    for (int i = 0; i < numDatos; ++i) {
-		std::cout<<"x"<<i<<": "<<x0<<std::endl;
+	for (int i = 0; i < numDatos; ++i) {
+		std::cout<<"valor para x"<<i<<": "<<x0<<std::endl;
 		std::cout<<"Ingresa el valor para f"<<i<<": ";
 		std::cin>>fx;
 		data.push_back(std::make_pair(x0, fx));
@@ -540,10 +648,86 @@ void LeerTablaDiferenciacionIntegracion(){
 	}
 }
 
-int posicionIntervalo(float intervalo){
-    for(int i=0; i<data.size(); i++)
-        if(fabs(intervalo - data[i].first) <= EPSILON)
-            return i;
+int posicionIntervalo(float intervalo) {
+	for(int i=0; i<data.size(); i++)
+		if(fabs(intervalo - data[i].first) <= EPSILON)
+			return i;
 
-        return -1;
+	return -1;
+}
+
+float SimpsonOneThird(const std::vector<float> subPosition, float hStep) {
+	float sum = 0;
+	sum += subPosition.at(0) + subPosition.at(2);
+	sum += 4 * subPosition.at(1);
+
+	return (hStep/3.0) * (sum);
+}
+
+float SimpsonThreeEighths(const std::vector<float> subPosition, float hStep) {
+    float sum = 0;
+	sum += subPosition.at(0) + subPosition.at(3);
+	sum += 3 * (subPosition.at(1) + subPosition.at(2));
+
+	return ((hStep * 3.0)/8.0) * (sum);
+}
+
+int Subintervals(int dataSize) {
+	int numIntervals = 0;
+	int suma = 0;
+	for(int i=0; suma < dataSize; i++) {
+		suma += 2;
+		numIntervals++;
+	}
+
+	return numIntervals;
+}
+
+std::vector<float> copyVector(int initialPosition,int finalPosition) {
+	std::vector<float> subPosition;
+	for(int i=initialPosition; i <= finalPosition; i++) {
+		subPosition.push_back(data[i].second);
+	}
+
+	return subPosition;
+}
+
+void ModificarPosicionDiferenciacionIntegracion(int position){
+    float fx;
+	std::cout << "Ingresa el valor de f" << position << ": ";
+	std::cin >> fx;
+	data.at(position).second = fx;
+}
+
+void SetupTableDiferenciacionIntegracion(){
+    char opc;
+
+	LeerTablaDiferenciacionIntegracion();
+	clearScreen();
+	ImprimirTabla();
+	std::cout << "Los datos de la tabla son correctos: (s/n): ";
+	std::cin >> opc;
+
+	if (opc == 's')
+		return;
+
+	while (opc != 's') {
+		int position;
+		std::cout << "Indica la posicion que se modificara: ";
+		std::cin >> position;
+		ModificarPosicionDiferenciacionIntegracion(position);
+		ImprimirTabla();
+		std::cout << "Los datos de la tabla son correctos: (s/n): ";
+		std::cin >> opc;
+	}
+}
+
+bool DataIsEquidistant(){
+    float hStep = data[1].first - data[0].first;
+
+    for(int i=0; i<data.size()-1; i++){
+        if(fabs(fabs(data[i].first-data[i+1].first) - hStep) >= EPSILON)
+            return false;
+    }
+    return true;
 }
